@@ -2,8 +2,9 @@
 import urllib
 import urllib2
 import json
+import vlc
 import subprocess
-
+import thread
 DOUBANDOMAIN = "http://www.douban.com/"
 LOGINPATH = "j/app/login"
 CHANNELPATH = "j/app/radio/channels"
@@ -60,6 +61,9 @@ class DouBanFMOnBerray:
 		self.channels = [];
 		self.channelSongs = {}
 		self.player = None
+		self.currentSongs = []
+		self.index = 0
+		self.user = None;
 	def login(self,uname,passwd):
 		data = urllib.urlencode({"email":uname,"password":passwd,"app_name":"radio_desktop_win","version":"100"});
 		req = urllib2.Request(DOUBANDOMAIN+LOGINPATH,data);
@@ -126,28 +130,45 @@ class DouBanFMOnBerray:
 		self.channelSongs[channel_id]=songarrray;
 		return self.channelSongs[channel_id] 
 
-	def play(self,filename):
+	def play(self):
 		"""intall mpg123:brew install mpg123"""
-		print(filename)
+		song = self.currentSongs[self.index]
+		filename = song.url;
+		print(song.title)
+		self.stop()
 		if self.player == None:
 			self.player = subprocess.Popen(["mpg123",filename]);
-			self.player.wait();
+			self.player.wait()
+			self.player = None
+			self.playnext()
+
+	def stop(self):
+		if self.player != None:
+			self.player.kill()
 			self.player = None;
 
+	def playnext(self):
+		self.index+=1
+		print(self.index);
+		if self.index == len(self.currentSongs):
+			songs = self.getSongs(self.user.user_id, self.user.expire, self.user.token, str(self.channels[0].channel_id));
+			self.currentSongs = songs;
+			self.index = 0;
+			print("next bounce songs");
+		self.index = self.index%len(self.currentSongs)
+		if self.player!=None:
+			self.stop()
+		self.play()
 
+	def playMusicFormFM(self,uname,passwd):	
+		self.user = self.login(uname,passwd);
+		print(self.user.token)
+		self.getChannels();
 
-berryFM = DouBanFMOnBerray()
-user = berryFM.login(YOUR_DOUBAN_ACCOUNT,YOUR_PASSWROD);
-berryFM.getChannels();
-songs = berryFM.getSongs(user.user_id, user.expire, user.token, str(berryFM.channels[0].channel_id));
-print("1");
-
-
-while 1:
-	songs = berryFM.getSongs(user.user_id, user.expire, user.token, str(berryFM.channels[0].channel_id));
-	for song in songs:
-		berryFM.play(song.url);
-		print "end"
+		songs = self.getSongs(self.user.user_id, self.user.expire, self.user.token, str(self.channels[0].channel_id));
+		self.currentSongs = songs;
+		self.index = -1;
+		self.playnext()
 
 
 
