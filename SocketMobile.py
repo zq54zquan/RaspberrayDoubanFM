@@ -11,7 +11,7 @@ class FMSocketServer:
 		self.socket.bind((host,5007))
 		self.socket.listen(100);
 		self.doubanFM = doubanFM.DouBanFMOnBerray()
-		thread.start_new_thread(self.doubanFM.playMusicFormFM, ("zq54zquan@gmail.com","7991205aa"))
+		thread.start_new_thread(self.doubanFM.playMusicFormFM, (YOUR_DOUBAN_ACCOUT,YOUR_DOUBAN_PASSWORD))
 	def startServer(self):
 		while (1):
 			(conn,addr) = self.socket.accept()
