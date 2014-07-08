@@ -2,7 +2,6 @@
 import urllib
 import urllib2
 import json
-import vlc
 import subprocess
 import thread
 DOUBANDOMAIN = "http://www.douban.com/"
